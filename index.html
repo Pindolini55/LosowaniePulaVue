@@ -1,25 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="anonymous">
-  <link rel="preload" as="style" onload="this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap">
-  <link rel="preload" as="font" type="font/eot" href="/losowaniepulavue/assets/materialdesignicons-webfont-861aea05.eot" crossorigin="anonymous">
-  <link rel="preload" as="font" type="font/woff2" href="/losowaniepulavue/assets/materialdesignicons-webfont-e52d60f6.woff2" crossorigin="anonymous">
-  <link rel="preload" as="font" type="font/woff" href="/losowaniepulavue/assets/materialdesignicons-webfont-48d3eec6.woff" crossorigin="anonymous">
-  <link rel="preload" as="font" type="font/ttf" href="/losowaniepulavue/assets/materialdesignicons-webfont-bd725a7a.ttf" crossorigin="anonymous">
-
-  <meta charset="UTF-8" />
-  <link rel="icon" href="/losowaniepulavue/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to Vuetify 3</title>
-  <script type="module" crossorigin src="/losowaniepulavue/assets/index-82509ec2.js"></script>
-  <link rel="stylesheet" href="/losowaniepulavue/assets/index-83f978e4.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Losowanie Osoby</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    button {
+      margin: 20px;
+      padding: 10px 20px;
+    }
+  </style>
 </head>
-
 <body>
-  <div id="app"></div>
-  <span>Siema</span>
-</body>
 
+<h1>Losowanie Osoby</h1>
+<button onclick="losujOsobe()">Losuj osobę</button>
+<p id="wynik"></p>
+
+<script>
+  // Przykładowa pula osób
+  const osoby = ['Anna', 'Jan', 'Kasia', 'Piotr', 'Monika'];
+
+  function losujOsobe() {
+    const wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
+    document.getElementById('wynik').innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
+  }
+</script>
+
+</body>
 </html>
