@@ -23,6 +23,11 @@
     #maszyna {
       display: none; /* Ukryj na początku */
     }
+    #wylosowaneZdjecie {
+      display: none; /* Ukryj na początku */
+      max-width: 300px; /* Dostosuj szerokość zdjęcia */
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +38,8 @@
 
 <button id="losujBtn">Losuj osobę</button>
 <p id="wynik"></p>
+
+<img src="https://media.istockphoto.com/id/1001563468/photo/headshot-of-handsome-surprised-black-man-looking-at-the-camera-astonished-with-big-sale.jpg?s=612x612&w=0&k=20&c=A4NX72cahXi5lxXiNL03JwDh2JJEwsfhafmJqlwx504=" alt="Wylosowane Zdjęcie" id="wylosowaneZdjecie">
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -54,6 +61,7 @@
   const losujBtn = document.getElementById('losujBtn');
   const wynik = document.getElementById('wynik');
   const maszyna = document.getElementById('maszyna');
+  const wylosowaneZdjecie = document.getElementById('wylosowaneZdjecie');
 
   losujBtn.addEventListener('click', () => {
     losujBtn.disabled = true; // Wyłącz przycisk podczas losowania
@@ -77,14 +85,15 @@
 
           // Ukryj przycisk, aby nie można było ponownie losować
           losujBtn.style.display = 'none';
+          wylosowaneZdjecie.style.display = 'block';
         } else {
           wynik.innerText = 'Brak osób do losowania.';
         }
 
         maszyna.style.display = 'none'; // Ukryj animację maszyny
       });
-    }, 6000); // Czas trwania animacji (3 sekundy)
-  }); // Brakujący znak }
+    }, 8000); // Czas trwania animacji (3 sekundy)
+  });
 
   function usunOsobeZBazy(osoba) {
     db.collection("osoby").where("name", "==", osoba).get().then((querySnapshot) => {
