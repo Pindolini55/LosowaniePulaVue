@@ -16,47 +16,33 @@
     .wheel {
       width: 300px;
       height: 300px;
-      border: 10px solid #000;
       border-radius: 50%;
       position: relative;
       margin: 0 auto;
+      transform: rotate(0deg);
+      transform-origin: center center;
     }
-    .wheel:after {
-      content: '';
+    .wheel-segment {
+      width: 0;
+      height: 0;
+      border-left: 150px solid transparent;
+      border-right: 150px solid transparent;
+      border-bottom: 150px solid #f1c40f; /* Kolor segmentu */
       position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background-color: #000;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-    }
-    .wheel:before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 8px;
-      height: 100px;
-      background-color: red;
-      transform: translateX(-50%) rotate(0deg);
-      transform-origin: 50% 100%;
+      top: 0;
+      left: 0;
+      transform-origin: bottom;
     }
     button {
       margin: 20px;
       padding: 10px 20px;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
 
 <h1>Losowanie Osoby</h1>
-<div class="wheel" id="wheel"></div>
+<canvas class="wheel" id="wheel" width="300" height="300"></canvas>
 <button id="losujBtn">Losuj osobę</button>
 <p id="wynik"></p>
 <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
@@ -68,33 +54,30 @@
 <script>
   // Konfiguracja Firebase
   const firebaseConfig = {
-    apiKey: "AIzaSyC9Kaqtzn5veYgNfilJVjtVvcQ-FDuxMS0",
-    authDomain: "losowaniepulavue.firebaseapp.com",
-    projectId: "losowaniepulavue",
-    storageBucket: "losowaniepulavue.appspot.com",
-    messagingSenderId: "336274214313",
-    appId: "1:336274214313:web:f0a1f9838b952fe62bc8b8",
-    measurementId: "G-4D188Z7KZ6"
+    apiKey: "TwojApiKey",
+    authDomain: "TwojaDomain",
+    projectId: "TwojProjectId",
+    storageBucket: "TwojStorageBucket",
+    messagingSenderId: "TwojMessagingSenderId",
+    appId: "TwojAppId",
+    measurementId: "TwojMeasurementId"
   };
-
 
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
   const losujBtn = document.getElementById('losujBtn');
-  const wheel = document.getElementById('wheel');
+  const canvas = document.getElementById('wheel');
   const wynik = document.getElementById('wynik');
+  const ctx = canvas.getContext('2d');
 
   losujBtn.addEventListener('click', () => {
-    wheel.style.animation = "spin 4s linear";
     losujOsobe();
-    setTimeout(() => {
-      wheel.style.animation = "";
-    }, 4000);
   });
 
   function losujOsobe() {
+    // Pobierz imiona z bazy danych i zapisz je w tablicy "osoby"
     db.collection("osoby").get().then((querySnapshot) => {
       const osoby = [];
       querySnapshot.forEach((doc) => {
@@ -102,15 +85,52 @@
       });
 
       if (osoby.length > 0) {
+        // Losuj osobę
         const wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
-        document.getElementById('wynik').innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
 
-        // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
+        // Wyświetl wynik
+        wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
+
+        // Usuń wylosowaną osobę z bazy danych
         usunOsobeZBazy(wylosowanaOsoba);
+
+        // Narysuj koło fortuny z imionami
+        rysujKoloFortuny(osoby);
       } else {
-        document.getElementById('wynik').innerText = 'Brak osób do losowania.';
+        wynik.innerText = 'Brak osób do losowania.';
       }
     });
+  }
+
+  function rysujKoloFortuny(imiona) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const iloscImion = imiona.length;
+    const krokKata = (Math.PI * 2) / iloscImion;
+
+    for (let i = 0; i < iloscImion; i++) {
+      const startKata = i * krokKata;
+      const koniecKata = (i + 1) * krokKata;
+      const srodekX = canvas.width / 2;
+      const srodekY = canvas.height / 2;
+
+      // Rysuj segment z imieniem
+      ctx.beginPath();
+      ctx.moveTo(srodekX, srodekY);
+      ctx.arc(srodekX, srodekY, 150, startKata, koniecKata);
+      ctx.fillStyle = '#f1c40f'; // Kolor segmentu
+      ctx.fill();
+      ctx.closePath();
+
+      // Rysuj tekst z imieniem na środku segmentu
+      const srodekKata = (startKata + koniecKata) / 2;
+      ctx.save();
+      ctx.translate(srodekX, srodekY);
+      ctx.rotate(srodekKata);
+      ctx.fillStyle = '#000'; // Kolor tekstu
+      ctx.font = '18px Arial';
+      ctx.fillText(imiona[i], 60, 0);
+      ctx.restore();
+    }
   }
 
   function usunOsobeZBazy(osoba) {
