@@ -5,59 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Losowanie Osoby z Firebase</title>
   <style>
-    .wheel {
-      width: 300px;
-      height: 300px;
-      border: 10px solid #000;
-      border-radius: 50%;
-      position: relative;
-      margin: 0 auto;
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
     }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+
+    button {
+      margin: 20px;
+      padding: 10px 20px;
     }
-    .wheel:after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background-color: #000;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-    }
-    .wheel:before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 8px;
-      height: 100px;
-      background-color: red;
-      transform: translateX(-50%) rotate(0deg);
-      transform-origin: 50% 100%;
-    }
-    .color-wheel {
-      border-image: conic-gradient(
-              #FF5733,
-              #33FF57,
-              #5733FF
-      ) 1;
-      border-image-slice: 1;
-    }
-    .label {
-      position: absolute;
-      transform-origin: 50% 100%;
-      font-size: 14px;
+
+    /* Dodaj styl dla obrazka maszyny */
+    #maszyna {
+      display: none; /* Ukryj na początku */
     }
   </style>
 </head>
 <body>
 <h1>Losowanie Osoby</h1>
-<!-- Zaktualizowane koło z nowymi stylami -->
-<div class="wheel color-wheel" id="wheel"></div>
+
+<!-- Dodaj obrazek animowanej maszyny (GIF) -->
+<img src="https://www.us-lotterypowerball.com/images/play_machine.gif" alt="Maszyna" id="maszyna">
+
 <button id="losujBtn">Losuj osobę</button>
 <p id="wynik"></p>
 
@@ -79,40 +52,39 @@
   const db = firebase.firestore();
 
   const losujBtn = document.getElementById('losujBtn');
-  const wheel = document.getElementById('wheel');
   const wynik = document.getElementById('wynik');
+  const maszyna = document.getElementById('maszyna');
 
   losujBtn.addEventListener('click', () => {
-    wheel.style.animation = "spin 4s linear";
-    losujOsobe();
-  });
+    losujBtn.disabled = true; // Wyłącz przycisk podczas losowania
+    wynik.innerText = 'Losowanie...';
+    maszyna.style.display = 'block'; // Wyświetl animację maszyny
 
-  function losujOsobe() {
-    db.collection("osoby").get().then((querySnapshot) => {
-      const osoby = [];
-      querySnapshot.forEach((doc) => {
-        osoby.push(doc.data().name);
+    // Symulacja kręcenia maszyny przez 3 sekundy (możesz dostosować czas)
+    setTimeout(() => {
+      db.collection("osoby").get().then((querySnapshot) => {
+        const osoby = [];
+        querySnapshot.forEach((doc) => {
+          osoby.push(doc.data().name);
+        });
+
+        if (osoby.length > 0) {
+          const wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
+          wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
+
+          // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
+          usunOsobeZBazy(wylosowanaOsoba);
+
+          // Ukryj przycisk, aby nie można było ponownie losować
+          losujBtn.style.display = 'none';
+        } else {
+          wynik.innerText = 'Brak osób do losowania.';
+        }
+
+        maszyna.style.display = 'none'; // Ukryj animację maszyny
       });
-
-      if (osoby.length > 0) {
-        const wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
-        document.getElementById('wynik').innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
-
-        // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
-        usunOsobeZBazy(wylosowanaOsoba);
-
-        // Dodaj etykietę na kole z wylosowanym imieniem
-        dodajEtykieteNaKole(wylosowanaOsoba);
-      } else {
-        document.getElementById('wynik').innerText = 'Brak osób do losowania.';
-      }
-
-      // Po zakończeniu animacji usuń ją
-      setTimeout(() => {
-        wheel.style.animation = "";
-      }, 4000);
-    });
-  }
+    }, 3000); // Czas trwania animacji (3 sekundy)
+  }); // Brakujący znak }
 
   function usunOsobeZBazy(osoba) {
     db.collection("osoby").where("name", "==", osoba).get().then((querySnapshot) => {
@@ -123,26 +95,6 @@
       });
     });
   }
-
-  function dodajEtykieteNaKole(imie) {
-    const etykieta = document.createElement('div');
-    etykieta.className = 'label';
-    etykieta.innerText = imie;
-
-    // Ustal pozycję etykiety na kole
-    const kat = Math.random() * 360; // Losowy kąt
-    const promien = 150; // Promień koła
-    const radians = (kat - 90) * (Math.PI / 180); // Konwersja na radiany
-    const x = 150 + promien * Math.cos(radians); // Współrzędna X
-    const y = 150 + promien * Math.sin(radians); // Współrzędna Y
-
-    etykieta.style.left = x + 'px';
-    etykieta.style.top = y + 'px';
-
-    // Dodaj etykietę do koła
-    wheel.appendChild(etykieta);
-  }
-
 </script>
 </body>
 </html>
