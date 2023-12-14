@@ -5,14 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Losowanie Osoby z Firebase</title>
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-    }
     .wheel {
       width: 300px;
       height: 300px;
@@ -20,6 +12,10 @@
       border-radius: 50%;
       position: relative;
       margin: 0 auto;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     .wheel:after {
       content: '';
@@ -43,44 +39,33 @@
       transform: translateX(-50%) rotate(0deg);
       transform-origin: 50% 100%;
     }
-    button {
-      margin: 20px;
-      padding: 10px 20px;
+    .color-wheel {
+      border-image: conic-gradient(
+              #FF5733,
+              #33FF57,
+              #5733FF
+      ) 1;
+      border-image-slice: 1;
     }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    .label {
+      position: absolute;
+      transform-origin: 50% 100%;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-
 <h1>Losowanie Osoby</h1>
-<div class="wheel" id="wheel"></div>
+<!-- Zaktualizowane koło z nowymi stylami -->
+<div class="wheel color-wheel" id="wheel"></div>
 <button id="losujBtn">Losuj osobę</button>
 <p id="wynik"></p>
-<!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
-<!-- Add Firebase products that you want to use -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
-  // Konfiguracja Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyC9Kaqtzn5veYgNfilJVjtVvcQ-FDuxMS0",
-    authDomain: "losowaniepulavue.firebaseapp.com",
-    projectId: "losowaniepulavue",
-    storageBucket: "losowaniepulavue.appspot.com",
-    messagingSenderId: "336274214313",
-    appId: "1:336274214313:web:f0a1f9838b952fe62bc8b8",
-    measurementId: "G-4D188Z7KZ6"
-  };
-
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  // Konfiguracja Firebase (tak jak wcześniej)
 
   const losujBtn = document.getElementById('losujBtn');
   const wheel = document.getElementById('wheel');
@@ -89,9 +74,6 @@
   losujBtn.addEventListener('click', () => {
     wheel.style.animation = "spin 4s linear";
     losujOsobe();
-    setTimeout(() => {
-      wheel.style.animation = "";
-    }, 4000);
   });
 
   function losujOsobe() {
@@ -107,9 +89,17 @@
 
         // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
         usunOsobeZBazy(wylosowanaOsoba);
+
+        // Dodaj etykietę na kole z wylosowanym imieniem
+        dodajEtykieteNaKole(wylosowanaOsoba);
       } else {
         document.getElementById('wynik').innerText = 'Brak osób do losowania.';
       }
+
+      // Po zakończeniu animacji usuń ją
+      setTimeout(() => {
+        wheel.style.animation = "";
+      }, 4000);
     });
   }
 
@@ -122,7 +112,26 @@
       });
     });
   }
-</script>
 
+  function dodajEtykieteNaKole(imie) {
+    const etykieta = document.createElement('div');
+    etykieta.className = 'label';
+    etykieta.innerText = imie;
+
+    // Ustal pozycję etykiety na kole
+    const kat = Math.random() * 360; // Losowy kąt
+    const promien = 150; // Promień koła
+    const radians = (kat - 90) * (Math.PI / 180); // Konwersja na radiany
+    const x = 150 + promien * Math.cos(radians); // Współrzędna X
+    const y = 150 + promien * Math.sin(radians); // Współrzędna Y
+
+    etykieta.style.left = x + 'px';
+    etykieta.style.top = y + 'px';
+
+    // Dodaj etykietę do koła
+    wheel.appendChild(etykieta);
+  }
+
+</script>
 </body>
 </html>
