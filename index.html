@@ -13,18 +13,52 @@
       height: 100vh;
       flex-direction: column;
     }
+    .wheel {
+      width: 300px;
+      height: 300px;
+      border: 10px solid #000;
+      border-radius: 50%;
+      position: relative;
+      margin: 0 auto;
+    }
+    .wheel:after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background-color: #000;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .wheel:before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 100px;
+      background-color: red;
+      transform: translateX(-50%) rotate(0deg);
+      transform-origin: 50% 100%;
+    }
     button {
       margin: 20px;
       padding: 10px 20px;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
 
 <h1>Losowanie Osoby</h1>
+<div class="wheel" id="wheel"></div>
 <button id="losujBtn">Losuj osobę</button>
 <p id="wynik"></p>
-
 <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
@@ -48,8 +82,16 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  document.getElementById('losujBtn').addEventListener('click', () => {
+  const losujBtn = document.getElementById('losujBtn');
+  const wheel = document.getElementById('wheel');
+  const wynik = document.getElementById('wynik');
+
+  losujBtn.addEventListener('click', () => {
+    wheel.style.animation = "spin 4s linear";
     losujOsobe();
+    setTimeout(() => {
+      wheel.style.animation = "";
+    }, 4000);
   });
 
   function losujOsobe() {
