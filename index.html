@@ -120,8 +120,8 @@
           wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
 
           // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
-          usunOsobeZBazy(wylosowanaOsoba);
-          usunOsobeZBazy(wybranaOsoba);
+          usunOsobeZBazy(wybranaOsoba, 1);
+          usunOsobeZBazy(wylosowanaOsoba, 2);
 
           // Ukryj przycisk, aby nie można było ponownie losować
           losujBtn.style.display = 'none';
@@ -135,14 +135,25 @@
     }, 8000); // Czas trwania animacji (3 sekundy)
   });
 
-  function usunOsobeZBazy(osoba) {
-    db.collection("osoby").where("name", "==", osoba).get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        db.collection("osobydolosowania").doc(doc.id).delete().then(() => {
-          console.log("Osoba usunięta: ", osoba);
+  function usunOsobeZBazy(osoba, type) {
+    if (type === 1) {
+      db.collection("osobylosujace").where("name", "==", osoba).get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          db.collection("osobylosujace").doc(doc.id).delete().then(() => {
+            console.log("Osoba usunięta: ", osoba);
+          });
         });
       });
-    });
+    } else if (type === 2) {
+      db.collection("osobydolosowania").where("name", "==", osoba).get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          db.collection("osobydolosowania").doc(doc.id).delete().then(() => {
+            console.log("Osoba usunięta: ", osoba);
+          });
+        });
+      });
+    }
+
   }
 </script>
 </body>
