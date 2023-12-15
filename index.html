@@ -28,10 +28,16 @@
       max-width: 300px; /* Dostosuj szerokość zdjęcia */
       margin-top: 20px;
     }
+    #losujBtn {
+      display: none;
+    }
   </style>
 </head>
 <body>
 <h1>Losowanie Osoby</h1>
+
+<select id="osobySelect"></select>
+<button id="dalejBtn">Dalej</button>
 
 <!-- Dodaj obrazek animowanej maszyny (GIF) -->
 <img src="https://www.us-lotterypowerball.com/images/play_machine.gif" alt="Maszyna" id="maszyna">
@@ -47,13 +53,13 @@
 <script>
   // Konfiguracja Firebase
   const firebaseConfig = {
-    apiKey: "AIzaSyC9Kaqtzn5veYgNfilJVjtVvcQ-FDuxMS0",
-    authDomain: "losowaniepulavue.firebaseapp.com",
-    projectId: "losowaniepulavue",
-    storageBucket: "losowaniepulavue.appspot.com",
-    messagingSenderId: "336274214313",
-    appId: "1:336274214313:web:f0a1f9838b952fe62bc8b8",
-    measurementId: "G-4D188Z7KZ6"
+    apiKey: "TwójKluczAPI",
+    authDomain: "TwójDomena.firebaseapp.com",
+    projectId: "TwójProjektId",
+    storageBucket: "TwójProjektId.appspot.com",
+    messagingSenderId: "TwójMessagingSenderId",
+    appId: "TwójAppId",
+    measurementId: "TwójMeasurementId"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -62,6 +68,30 @@
   const wynik = document.getElementById('wynik');
   const maszyna = document.getElementById('maszyna');
   const wylosowaneZdjecie = document.getElementById('wylosowaneZdjecie');
+  const osobySelect = document.getElementById('osobySelect');
+  const dalejBtn = document.getElementById('dalejBtn');
+
+  let wybranaOsoba = "";
+
+  osobySelect.addEventListener('change', (event) => {
+    wybranaOsoba = event.target.value;
+  });
+
+  db.collection("osobylosujace").get().then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      const option = document.createElement('option');
+      option.value = doc.data().name;
+      option.text = doc.data().name;
+      osobySelect.appendChild(option);
+    });
+  });
+
+  dalejBtn.addEventListener('click', () =>  {
+    dalejBtn.style.display = 'none';
+    osobySelect.style.display = 'none';
+    losujBtn.style.display = 'block';
+  })
+
 
   losujBtn.addEventListener('click', () => {
     losujBtn.disabled = true; // Wyłącz przycisk podczas losowania
@@ -70,18 +100,23 @@
 
     // Symulacja kręcenia maszyny przez 3 sekundy (możesz dostosować czas)
     setTimeout(() => {
-      db.collection("osoby").get().then((querySnapshot) => {
+      db.collection("osobydolosowania").get().then((querySnapshot) => {
         const osoby = [];
         querySnapshot.forEach((doc) => {
           osoby.push(doc.data().name);
         });
 
         if (osoby.length > 0) {
-          const wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
+          let wylosowanaOsoba = "";
+          do {
+            wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
+          } while (wylosowanaOsoba === wybranaOsoba); // Sprawdź, czy wylosowana osoba jest różna od wybranej
+
           wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
 
           // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
           usunOsobeZBazy(wylosowanaOsoba);
+          usunOsobeZBazy(wybranaOsoba);
 
           // Ukryj przycisk, aby nie można było ponownie losować
           losujBtn.style.display = 'none';
@@ -98,7 +133,7 @@
   function usunOsobeZBazy(osoba) {
     db.collection("osoby").where("name", "==", osoba).get().then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-        db.collection("osoby").doc(doc.id).delete().then(() => {
+        db.collection("osobydolosowania").doc(doc.id).delete().then(() => {
           console.log("Osoba usunięta: ", osoba);
         });
       });
