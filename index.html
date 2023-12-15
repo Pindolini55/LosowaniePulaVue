@@ -46,7 +46,7 @@
 </head>
 <body>
 <h1>Losowanie Osoby</h1>
-
+<p id="selectSelf">Wybierz siebie</p>
 <select id="osobySelect"></select>
 <button id="dalejBtn">Dalej</button>
 
@@ -82,6 +82,7 @@
   const wylosowaneZdjecie = document.getElementById('wylosowaneZdjecie');
   const osobySelect = document.getElementById('osobySelect');
   const dalejBtn = document.getElementById('dalejBtn');
+  const selfText = document.getElementById('selectSelf');
 
   let wybranaOsoba = "";
 
@@ -103,6 +104,7 @@
     dalejBtn.style.display = 'none';
     osobySelect.style.display = 'none';
     losujBtn.style.display = 'block';
+    selfText.style.display = 'block';
   })
 
 
