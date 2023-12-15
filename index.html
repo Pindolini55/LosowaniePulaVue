@@ -31,6 +31,9 @@
     #losujBtn {
       display: none;
     }
+    #dalejBtn {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -76,6 +79,7 @@
 
   osobySelect.addEventListener('change', (event) => {
     wybranaOsoba = event.target.value;
+    dalejBtn.style.display = 'block';
   });
 
   db.collection("osobylosujace").get().then((querySnapshot) => {
