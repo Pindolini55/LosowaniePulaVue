@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Losowanie Osoby z Firebase</title>
   <style>
-    body {
+    .body-losowanie {
       font-family: 'Arial', sans-serif;
       display: flex;
       justify-content: center;
@@ -42,24 +42,61 @@
     #dalejBtn {
       background-color: #28A745;
     }
+    #loginForm {
+      border: 1px solid #ddd;
+      padding: 10px;
+      width: 300px;
+      background-color: #f9f9f9;
+    }
+    #zalogujBtn {
+      display: none;
+    }
+    #inputContainer input {
+      display: block;
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
-<h1>Losowanie Osoby</h1>
-<h3 id="selectSelf">Wybierz siebie</h3>
-<select id="osobySelect"></select>
-<button id="dalejBtn">Dalej</button>
+<button id="zalogujBtn" onclick="openLoginForm()">Zaloguj się</button>
+<div id="loginForm" style="display:none;">
+  <form>
+    <label for="email_field">Login:</label><br>
+    <input type="text" id="email_field" name="username"><br>
+    <label for="password_field">Hasło:</label><br>
+    <input type="password" id="password_field" name="password"><br>
+    <input type="button" onclick="login()" value="Zaloguj się">
+  </form>
+</div>
+<div id="addForm" style="display:none;">
+  <select id="collectionSelect">
+    <option value="osobylosujace">Osoby Losujące</option>
+    <option value="osobydolosowania">Osoby Do Losowania</option>
+    <option value="all">Obydwie kolekcje</option>
+  </select>
+  <button id="addInputBtn">Dodaj osobę</button>
+  <div id="inputContainer"></div>
+  <button id="saveBtn">Zapisz</button>
+</div>
+<div id="losowanieMain" class="body-losowanie">
+  <h1 id="hiddenText">Losowanie Osoby</h1>
+  <h3 id="selectSelf">Wybierz siebie</h3>
+  <select id="osobySelect"></select>
+  <button id="dalejBtn">Dalej</button>
+  <img src="https://www.us-lotterypowerball.com/images/play_machine.gif" alt="Maszyna" id="maszyna">
+
+  <button id="losujBtn">Losuj osobę</button>
+  <p id="wynik"></p>
+
+  <img src="https://media.istockphoto.com/id/1001563468/photo/headshot-of-handsome-surprised-black-man-looking-at-the-camera-astonished-with-big-sale.jpg?s=612x612&w=0&k=20&c=A4NX72cahXi5lxXiNL03JwDh2JJEwsfhafmJqlwx504=" alt="Wylosowane Zdjęcie" id="wylosowaneZdjecie">
+</div>
+
 
 <!-- Dodaj obrazek animowanej maszyny (GIF) -->
-<img src="https://www.us-lotterypowerball.com/images/play_machine.gif" alt="Maszyna" id="maszyna">
-
-<button id="losujBtn">Losuj osobę</button>
-<p id="wynik"></p>
-
-<img src="https://media.istockphoto.com/id/1001563468/photo/headshot-of-handsome-surprised-black-man-looking-at-the-camera-astonished-with-big-sale.jpg?s=612x612&w=0&k=20&c=A4NX72cahXi5lxXiNL03JwDh2JJEwsfhafmJqlwx504=" alt="Wylosowane Zdjęcie" id="wylosowaneZdjecie">
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
   // Konfiguracja Firebase
@@ -76,6 +113,8 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+
+  const hiddenText = document.getElementById('hiddenText');
   const losujBtn = document.getElementById('losujBtn');
   const wynik = document.getElementById('wynik');
   const maszyna = document.getElementById('maszyna');
@@ -83,6 +122,9 @@
   const osobySelect = document.getElementById('osobySelect');
   const dalejBtn = document.getElementById('dalejBtn');
   const selfText = document.getElementById('selectSelf');
+  const zalogujBtn = document.getElementById('zalogujBtn');
+  const zalogujForm = document.getElementById('loginForm');
+  const addForm = document.getElementById('addForm');
 
   let wybranaOsoba = "";
 
@@ -100,12 +142,90 @@
     });
   });
 
+  function openLoginForm() {
+    let item = document.getElementById("loginForm");
+    if (item.style.display === 'block') {
+      item.style.display = 'none';
+    } else {
+      item.style.display = 'block';
+    }
+  }
+
+  hiddenText.addEventListener('click', () =>  {
+    if (zalogujBtn.style.display === 'block') {
+      zalogujBtn.style.display = 'none';
+      zalogujForm.style.display = 'none';
+    } else {
+      zalogujBtn.style.display = 'block';
+    }
+  })
+
   dalejBtn.addEventListener('click', () =>  {
     dalejBtn.style.display = 'none';
     osobySelect.style.display = 'none';
     losujBtn.style.display = 'block';
     selfText.style.display = 'none';
   })
+
+  //DODAWANIE DO BAZY
+  document.getElementById("addInputBtn").addEventListener("click", addInput);
+  document.getElementById("saveBtn").addEventListener("click", saveToFirestore);
+
+  function addInput() {
+    var inputContainer = document.getElementById("inputContainer");
+    var newInput = document.createElement("input");
+    newInput.type = "text";
+    newInput.className = "personInput";
+    inputContainer.appendChild(newInput);
+  }
+
+  function saveToFirestore() {
+    var selectedCollection = document.getElementById("collectionSelect").value;
+    var inputs = document.getElementsByClassName("personInput");
+
+    if (selectedCollection === 'all') {
+      Array.from(inputs).forEach(input => {
+        if (input.value.trim() !== "") {
+          firebase.firestore().collection('osobylosujace').add({
+            name: input.value
+          }).then(() => {
+            console.log("Osoba dodana: " + input.value);
+          }).catch(error => {
+            console.error("Błąd dodawania osoby: ", error);
+          });
+        }
+      });
+      Array.from(inputs).forEach(input => {
+        if (input.value.trim() !== "") {
+          firebase.firestore().collection('osobydolosowania').add({
+            name: input.value
+          }).then(() => {
+            console.log("Osoba dodana: " + input.value);
+          }).catch(error => {
+            console.error("Błąd dodawania osoby: ", error);
+          });
+        }
+      });
+    } else {
+      Array.from(inputs).forEach(input => {
+        if (input.value.trim() !== "") {
+          firebase.firestore().collection(selectedCollection).add({
+            name: input.value
+          }).then(() => {
+            console.log("Osoba dodana: " + input.value);
+          }).catch(error => {
+            console.error("Błąd dodawania osoby: ", error);
+          });
+        }
+      });
+    }
+
+    // Wyczyszczenie inputów
+    document.getElementById("inputContainer").innerHTML = "";
+  }
+
+
+  //
 
 
   losujBtn.addEventListener('click', () => {
@@ -142,7 +262,7 @@
 
         maszyna.style.display = 'none'; // Ukryj animację maszyny
       });
-    }, 8000); // Czas trwania animacji (3 sekundy)
+    }, 8000); // Czas trwania animacji (8 sekund)
   });
 
   function usunOsobeZBazy(osoba, type) {
@@ -164,6 +284,28 @@
       });
     }
 
+  }
+
+  function login() {
+    var userEmail = document.getElementById("email_field").value;
+    var userPass = document.getElementById("password_field").value;
+
+    firebase.auth().signInWithEmailAndPassword(userEmail, userPass)
+            .then((userCredential) => {
+              // Logowanie udane
+              var user = userCredential.user;
+              addForm.style.display = 'block';
+              zalogujBtn.style.display = 'none';
+              document.getElementById('losowanieMain').style.display = 'none';
+              document.getElementById('loginForm').style.display = 'none';
+              // Możesz tutaj przekierować użytkownika lub wyświetlić powiadomienie o udanym logowaniu
+            })
+            .catch((error) => {
+              var errorCode = error.code;
+              var errorMessage = error.message;
+              // Obsługa błędów, np. użytkownik nie istnieje, złe hasło itd.
+              alert(errorMessage);
+            });
   }
 </script>
 </body>
