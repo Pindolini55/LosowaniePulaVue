@@ -92,8 +92,6 @@
 </div>
 
 
-<!-- Dodaj obrazek animowanej maszyny (GIF) -->
-
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -133,14 +131,24 @@
     dalejBtn.style.display = 'block';
   });
 
-  db.collection("osobylosujace").get().then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-      const option = document.createElement('option');
-      option.value = doc.data().name;
-      option.text = doc.data().name;
-      osobySelect.appendChild(option);
+  getOsobyLosujace();
+
+
+  async function getOsobyLosujace () {
+    let osoby = [];
+    await db.collection("osobylosujace").where("name", "!=", "Test").get().then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        const option = document.createElement('option');
+        option.value = doc.data().name;
+        option.text = doc.data().name;
+        osobySelect.appendChild(option);
+        osoby.push(doc.data().name);
+      });
     });
-  });
+    if (osoby.length > 0) {
+      wybranaOsoba = osoby[0];
+    }
+  }
 
   function openLoginForm() {
     let item = document.getElementById("loginForm");
@@ -228,54 +236,66 @@
   //
 
 
-  losujBtn.addEventListener('click', () => {
+  losujBtn.addEventListener('click', async () => {
     losujBtn.disabled = true; // Wyłącz przycisk podczas losowania
     wynik.innerText = 'Losowanie...';
     maszyna.style.display = 'block'; // Wyświetl animację maszyny
 
-    // Symulacja kręcenia maszyny przez 3 sekundy (możesz dostosować czas)
-    setTimeout(() => {
-      db.collection("osobydolosowania").get().then((querySnapshot) => {
+    setTimeout( async () => {
+      await db.collection("osobydolosowania").where("name", "!=", "Test").get().then((querySnapshot) => {
         const osoby = [];
         querySnapshot.forEach((doc) => {
           osoby.push(doc.data().name);
         });
 
-        if (osoby.length > 0) {
-          let wylosowanaOsoba = "";
-          do {
-            wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
-          } while (wylosowanaOsoba === wybranaOsoba); // Sprawdź, czy wylosowana osoba jest różna od wybranej
-
-          wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
-
-          // Opcjonalnie: Usuń wylosowaną osobę z bazy danych
-          usunOsobeZBazy(wybranaOsoba, 1);
-          usunOsobeZBazy(wylosowanaOsoba, 2);
-
-          // Ukryj przycisk, aby nie można było ponownie losować
-          losujBtn.style.display = 'none';
-          wylosowaneZdjecie.style.display = 'block';
+        if (osoby.length === 1) {
+          let wylosowanaOsoba = osoby[0];
+          if (wylosowanaOsoba === wybranaOsoba) {
+            wynik.innerText = 'Brak osób do losowania.';
+            losujBtn.style.display = 'none';
+          } else {
+            wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
+            usunOsobeZBazy(wybranaOsoba, 1);
+            usunOsobeZBazy(wylosowanaOsoba, 2);
+            losujBtn.style.display = 'none';
+            wylosowaneZdjecie.style.display = 'block';
+          }
         } else {
-          wynik.innerText = 'Brak osób do losowania.';
+          if (osoby.length > 0) {
+            let wylosowanaOsoba = "";
+            do {
+              wylosowanaOsoba = osoby[Math.floor(Math.random() * osoby.length)];
+            } while (wylosowanaOsoba === wybranaOsoba);
+
+            wynik.innerText = 'Wylosowana osoba: ' + wylosowanaOsoba;
+
+            usunOsobeZBazy(wybranaOsoba, 1);
+            usunOsobeZBazy(wylosowanaOsoba, 2);
+
+            losujBtn.style.display = 'none';
+            wylosowaneZdjecie.style.display = 'block';
+          } else {
+            wynik.innerText = 'Brak osób do losowania.';
+          }
         }
+
 
         maszyna.style.display = 'none'; // Ukryj animację maszyny
       });
     }, 8000); // Czas trwania animacji (8 sekund)
   });
 
-  function usunOsobeZBazy(osoba, type) {
+  async function usunOsobeZBazy(osoba, type) {
     if (type === 1) {
-      db.collection("osobylosujace").where("name", "==", osoba).get().then((querySnapshot) => {
+      await db.collection("osobylosujace").where("name", "==", osoba).get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
-          db.collection("osobylosujace").doc(doc.id).delete().then(() => {
+           db.collection("osobylosujace").doc(doc.id).delete().then(() => {
             console.log("Osoba usunięta: ", osoba);
           });
         });
       });
     } else if (type === 2) {
-      db.collection("osobydolosowania").where("name", "==", osoba).get().then((querySnapshot) => {
+      await db.collection("osobydolosowania").where("name", "==", osoba).get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           db.collection("osobydolosowania").doc(doc.id).delete().then(() => {
             console.log("Osoba usunięta: ", osoba);
